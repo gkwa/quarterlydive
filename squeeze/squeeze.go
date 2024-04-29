@@ -9,17 +9,11 @@ import (
 	"strings"
 )
 
-func RunSqueezer() {
+func RunSqueezer(directory string) {
 	var excludeDirs arrayFlags
 	flag.Var(&excludeDirs, "exclude-dir", "Directories to exclude (can be specified multiple times)")
 	flag.Parse()
 
-	if len(flag.Args()) != 1 {
-		fmt.Println("Usage: squeeze-newlines [--exclude-dir dir] <directory>")
-		os.Exit(1)
-	}
-
-	directory := flag.Args()[0]
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
