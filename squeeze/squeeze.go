@@ -10,6 +10,27 @@ import (
 	"strings"
 )
 
+func CountCandidateFiles(directory string) int {
+	var count int
+	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && isCommittedInGit(path) {
+			count++
+		}
+
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("Error walking the directory: %v\n", err)
+		os.Exit(1)
+	}
+
+	return count
+}
+
 func RunSqueezer(directory string) {
 	var excludeDirs arrayFlags
 	flag.Var(&excludeDirs, "exclude-dir", "Directories to exclude (can be specified multiple times)")
