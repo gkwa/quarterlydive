@@ -1,6 +1,7 @@
 package squeeze
 
 import (
+	"crypto/md5"
 	"flag"
 	"log/slog"
 	"os"
@@ -34,6 +35,7 @@ func CountCandidateFiles(directory string) int {
 func RunSqueezer(directory string) {
 	var excludeDirs arrayFlags
 	flag.Var(&excludeDirs, "exclude-dir", "Directories to exclude (can be specified multiple times)")
+	excludeDirs = append(excludeDirs, ".git")
 	flag.Parse()
 
 	slog.Debug("processing directory", "dir", directory)
@@ -44,7 +46,7 @@ func RunSqueezer(directory string) {
 		}
 
 		if info.IsDir() {
-			if info.Name() == ".git" || excludeDirs.contains(info.Name()) {
+			if excludeDirs.contains(info.Name()) {
 				slog.Debug("skipping directory", "dir", info.Name())
 				return filepath.SkipDir
 			}
@@ -79,6 +81,8 @@ func squeezeNewlines(file string) {
 		return
 	}
 
+	originalChecksum := md5.Sum(content)
+
 	lines := strings.Split(string(content), "\n")
 	var squeezed []string
 	for i := 0; i < len(lines); i++ {
@@ -88,11 +92,18 @@ func squeezeNewlines(file string) {
 		squeezed = append(squeezed, lines[i])
 	}
 
-	err = os.WriteFile(file, []byte(strings.Join(squeezed, "\n")), 0o644)
-	if err != nil {
-		slog.Error("error writing file", "file", file, "error", err)
+	squeezedContent := []byte(strings.Join(squeezed, "\n"))
+	squeezedChecksum := md5.Sum(squeezedContent)
+
+	if originalChecksum != squeezedChecksum {
+		err = os.WriteFile(file, squeezedContent, 0o644)
+		if err != nil {
+			slog.Error("error writing file", "file", file, "error", err)
+		} else {
+			slog.Debug("file written successfully", "file", file)
+		}
 	} else {
-		slog.Debug("file written successfully", "file", file)
+		slog.Debug("file skipped (no changes)", "file", file)
 	}
 }
 
