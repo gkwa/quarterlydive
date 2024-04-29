@@ -1,16 +1,13 @@
 /*
 Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/taylormonacelli/quarterlydive/squeeze"
 )
 
-// squeezeCmd represents the squeeze command
 var squeezeCmd = &cobra.Command{
 	Use:   "squeeze",
 	Short: "A brief description of your command",
@@ -21,20 +18,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("squeeze called")
+		squeeze.RunSqueezer()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(squeezeCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// squeezeCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// squeezeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
