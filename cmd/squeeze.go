@@ -27,7 +27,8 @@ to quickly create a Cobra application.`,
 		if len(args) != 1 {
 			err := cmd.Usage()
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
 			}
 			return
 		}

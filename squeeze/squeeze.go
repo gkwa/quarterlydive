@@ -2,7 +2,6 @@ package squeeze
 
 import (
 	"flag"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -14,6 +13,7 @@ func CountCandidateFiles(directory string) int {
 	var count int
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			slog.Error("error walking directory", "error", err)
 			return err
 		}
 
@@ -24,7 +24,7 @@ func CountCandidateFiles(directory string) int {
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("Error walking the directory: %v\n", err)
+		slog.Error("error counting candidate files", "error", err)
 		os.Exit(1)
 	}
 
@@ -39,6 +39,7 @@ func RunSqueezer(directory string) {
 	slog.Debug("processing directory", "dir", directory)
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			slog.Error("error walking directory", "error", err)
 			return err
 		}
 
@@ -60,7 +61,7 @@ func RunSqueezer(directory string) {
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("Error walking the directory: %v\n", err)
+		slog.Error("error running squeezer", "error", err)
 		os.Exit(1)
 	}
 }
