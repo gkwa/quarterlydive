@@ -3,6 +3,7 @@ package squeeze
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +15,7 @@ func RunSqueezer(directory string) {
 	flag.Var(&excludeDirs, "exclude-dir", "Directories to exclude (can be specified multiple times)")
 	flag.Parse()
 
+	slog.Debug("processing directory", "dir", directory)
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -21,13 +23,17 @@ func RunSqueezer(directory string) {
 
 		if info.IsDir() {
 			if info.Name() == ".git" || excludeDirs.contains(info.Name()) {
+				slog.Debug("skipping directory", "dir", info.Name())
 				return filepath.SkipDir
 			}
 			return nil
 		}
 
+		slog.Debug("processing file", "file", path)
 		if isCommittedInGit(path) {
 			squeezeNewlines(path)
+		} else {
+			slog.Debug("skipping file not committed in Git", "file", path)
 		}
 
 		return nil
@@ -47,14 +53,14 @@ func isCommittedInGit(file string) bool {
 func squeezeNewlines(file string) {
 	content, err := os.ReadFile(file)
 	if err != nil {
-		fmt.Printf("Error reading file %s: %v\n", file, err)
+		slog.Error("error reading file", "file", file, "error", err)
 		return
 	}
 
 	lines := strings.Split(string(content), "\n")
 	var squeezed []string
 	for i := 0; i < len(lines); i++ {
-		if i > 0 && lines[i] == "" && lines[i-1] == "" {
+		if i > 0 && (lines[i] == "" || lines[i] == "\r") && (lines[i-1] == "" || lines[i-1] == "\r") {
 			continue
 		}
 		squeezed = append(squeezed, lines[i])
@@ -62,7 +68,9 @@ func squeezeNewlines(file string) {
 
 	err = os.WriteFile(file, []byte(strings.Join(squeezed, "\n")), 0o644)
 	if err != nil {
-		fmt.Printf("Error writing file %s: %v\n", file, err)
+		slog.Error("error writing file", "file", file, "error", err)
+	} else {
+		slog.Debug("file written successfully", "file", file)
 	}
 }
 

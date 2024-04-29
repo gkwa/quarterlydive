@@ -12,7 +12,7 @@ import (
 
 var (
 	cfgFile   string
-	verbose   bool
+	verbose   int
 	logFormat string
 )
 
@@ -38,7 +38,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.quarterlydive.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose mode")
+	rootCmd.PersistentFlags().CountVarP(&verbose, "verbose", "v", "increase verbosity level")
 	err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	if err != nil {
 		slog.Error("error binding verbose flag", "error", err)
@@ -79,7 +79,7 @@ func initConfig() {
 	}
 
 	logFormat = viper.GetString("log-format")
-	verbose = viper.GetBool("verbose")
+	verbose = viper.GetInt("verbose")
 
 	slog.Debug("using config file", "path", viper.ConfigFileUsed())
 	slog.Debug("log-format", "value", logFormat)
@@ -89,13 +89,21 @@ func initConfig() {
 }
 
 func setupLogging() {
-	if verbose || logFormat != "" {
-		if logFormat == "json" {
-			goldbug.SetDefaultLoggerJson(slog.LevelDebug)
-		} else {
-			goldbug.SetDefaultLoggerText(slog.LevelDebug)
-		}
-
-		slog.Debug("setup", "verbose", verbose)
+	var logLevel slog.Level
+	switch verbose {
+	case 0:
+		logLevel = slog.LevelInfo
+	case 1:
+		logLevel = slog.LevelDebug
+	default:
+		logLevel = slog.LevelDebug
 	}
+
+	if logFormat == "json" {
+		goldbug.SetDefaultLoggerJson(logLevel)
+	} else {
+		goldbug.SetDefaultLoggerText(logLevel)
+	}
+
+	slog.Debug("setup", "verbose", verbose)
 }
